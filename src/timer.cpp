@@ -15,6 +15,4 @@ uint64_t nvboard_get_time() {
   return now - boot_time;
 }
 
-void init_nvboard_timer() {
-  boot_time = get_time_internal();
-}
+void init_nvboard_timer() { boot_time = get_time_internal(); }

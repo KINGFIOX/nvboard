@@ -4,13 +4,14 @@
 // There is no need to update TX too frequently
 #define UART_TX_FPS 5
 
-static UART* uart = NULL;
+static UART *uart = NULL;
 int16_t uart_divisor_cnt = 0;
 bool is_uart_rx_idle = true;
 
-UART::UART(SDL_Renderer *rend, int cnt, int init_val, int ct, int x, int y, int w, int h):
-    Component(rend, cnt, init_val, ct),
-    tx_state(0), rx_state(0), divisor(16), need_update_gui(false) {
+UART::UART(SDL_Renderer *rend, int cnt, int init_val, int ct, int x, int y,
+           int w, int h)
+    : Component(rend, cnt, init_val, ct), tx_state(0), rx_state(0), divisor(16),
+      need_update_gui(false) {
   term = new Term(rend, x, y, w, h);
 
   SDL_Rect *rect_ptr = new SDL_Rect;
@@ -30,9 +31,7 @@ UART::UART(SDL_Renderer *rend, int cnt, int init_val, int ct, int x, int y, int 
   pin_poke(UART_RX, 1);
 }
 
-UART::~UART() {
-  SDL_DestroyTexture(get_texture(0));
-}
+UART::~UART() { SDL_DestroyTexture(get_texture(0)); }
 
 void UART::update_gui() { // everything is done in update_state()
 }
@@ -42,13 +41,13 @@ void UART::tx_receive() {
 
   uint8_t tx = *p_tx;
   if (tx_state == 0) { // idle
-    if (!tx) { // start bit
+    if (!tx) {         // start bit
       tx_data = 0;
-      tx_state ++;
+      tx_state++;
     }
   } else if (tx_state >= 1 && tx_state <= 8) { // data
-    tx_data = (tx << 7) | (tx_data >> 1);  // data bit
-    tx_state ++;
+    tx_data = (tx << 7) | (tx_data >> 1);      // data bit
+    tx_state++;
   } else if (tx_state == 9) {
     if (tx) { // stop bit
       tx_state = 0;
@@ -67,14 +66,14 @@ void UART::rx_send() {
       return;
     }
     rx_sending_str.erase(0, 1);
-    pin_poke(UART_RX, 0);  // start bit
-    rx_state ++;
+    pin_poke(UART_RX, 0); // start bit
+    rx_state++;
   } else if (rx_state >= 1 && rx_state <= 8) { // data
-    pin_poke(UART_RX, rx_data & 1);  // data bit
+    pin_poke(UART_RX, rx_data & 1);            // data bit
     rx_data >>= 1;
-    rx_state ++;
+    rx_state++;
   } else if (rx_state == 9) {
-    pin_poke(UART_RX, 1);  // stop bit
+    pin_poke(UART_RX, 1); // stop bit
     rx_state = 0;
   }
 }
@@ -96,26 +95,25 @@ void UART::update_state() {
   }
 }
 
-void UART::set_divisor(uint16_t d) {
-  divisor = d;
-}
+void UART::set_divisor(uint16_t d) { divisor = d; }
 
-void UART::term_focus(bool v) {
-  term->set_focus(v);
-}
+void UART::term_focus(bool v) { term->set_focus(v); }
 
 static void init_render_local(SDL_Renderer *renderer) {
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0);
   SDL_Point p[2];
   p[0] = Point(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2) - Point(0, 30);
   p[1] = p[0] - Point(10, 0);
-  const char* label[2] = { "RX", "TX" };
-  for (int i = 0; i < 2; i ++) {
+  const char *label[2] = {"RX", "TX"};
+  for (int i = 0; i < 2; i++) {
     draw_thicker_line(renderer, p, 2);
-    draw_str(renderer, label[i], p[1].x - 2 * CH_WIDTH, p[1].y - CH_HEIGHT / 2, 0xffffff);
-    p[0].y -= CH_HEIGHT; p[1].y -= CH_HEIGHT;
+    draw_str(renderer, label[i], p[1].x - 2 * CH_WIDTH, p[1].y - CH_HEIGHT / 2,
+             0xffffff);
+    p[0].y -= CH_HEIGHT;
+    p[1].y -= CH_HEIGHT;
   }
-  draw_str(renderer, "UART-[", p[1].x - 8 * CH_WIDTH, p[1].y + CH_HEIGHT, 0xffffff);
+  draw_str(renderer, "UART-[", p[1].x - 8 * CH_WIDTH, p[1].y + CH_HEIGHT,
+           0xffffff);
 }
 
 void init_uart(SDL_Renderer *renderer) {
@@ -127,18 +125,10 @@ void init_uart(SDL_Renderer *renderer) {
   add_component(uart);
 }
 
-void uart_tx_receive() {
-  uart->tx_receive();
-}
+void uart_tx_receive() { uart->tx_receive(); }
 
-void uart_rx_send() {
-  uart->rx_send();
-}
+void uart_rx_send() { uart->rx_send(); }
 
-void uart_rx_getchar(uint8_t ch) {
-  uart->rx_getchar(ch);
-}
+void uart_rx_getchar(uint8_t ch) { uart->rx_getchar(ch); }
 
-void uart_term_focus(bool v) {
-  uart->term_focus(v);
-}
+void uart_term_focus(bool v) { uart->term_focus(v); }

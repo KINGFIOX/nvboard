@@ -1,5 +1,5 @@
-#include <nvboard.h>
 #include <macro.h>
+#include <nvboard.h>
 
 Component::Component(SDL_Renderer *rend, int cnt, int init_val, int ct) {
   m_renderer = rend;
@@ -9,52 +9,33 @@ Component::Component(SDL_Renderer *rend, int cnt, int init_val, int ct) {
   m_state = init_val;
 }
 
-bool Component::in_rect(int x, int y) const{
+bool Component::in_rect(int x, int y) const {
   SDL_Rect *temp = m_rects[0];
-  return x >= temp->x && y >= temp->y 
-      && x < temp->x + temp->w 
-      && y < temp->y + temp->h;
+  return x >= temp->x && y >= temp->y && x < temp->x + temp->w &&
+         y < temp->y + temp->h;
 }
 
-SDL_Renderer *Component::get_renderer() const{
-  return m_renderer;
-}
+SDL_Renderer *Component::get_renderer() const { return m_renderer; }
 
-int Component::get_component_type() const{
-  return m_component_type;
-}
+int Component::get_component_type() const { return m_component_type; }
 
-SDL_Rect *Component::get_rect(int idx) const{
-  return m_rects[idx];
-}
+SDL_Rect *Component::get_rect(int idx) const { return m_rects[idx]; }
 
-SDL_Texture *Component::get_texture(int idx) const{
-  return m_textures[idx];
-}
+SDL_Texture *Component::get_texture(int idx) const { return m_textures[idx]; }
 
-int Component::get_state() const{
-  return m_state;
-}
+int Component::get_state() const { return m_state; }
 
-uint16_t Component::get_pin(int idx) const{
-  return pins[idx];
-}
+uint16_t Component::get_pin(int idx) const { return pins[idx]; }
 
-void Component::set_rect(SDL_Rect *rect, int val) {
-  m_rects[val] = rect;
-}
+void Component::set_rect(SDL_Rect *rect, int val) { m_rects[val] = rect; }
 
 void Component::set_texture(SDL_Texture *texture, int val) {
   m_textures[val] = texture;
 }
 
-void Component::set_state(int val) {
-  m_state = val;
-}
+void Component::set_state(int val) { m_state = val; }
 
-void Component::add_pin(const uint16_t pin) {
-  pins.push_back(pin);
-}
+void Component::add_pin(const uint16_t pin) { pins.push_back(pin); }
 
 void Component::update_gui() {
   SDL_RenderCopy(m_renderer, m_textures[m_state], NULL, m_rects[m_state]);
@@ -71,7 +52,9 @@ void Component::update_state() {
 }
 
 void Component::remove() {
-  for (auto rect_ptr : m_rects) { delete rect_ptr; }
+  for (auto rect_ptr : m_rects) {
+    delete rect_ptr;
+  }
 }
 
 #if 0
@@ -96,16 +79,19 @@ void RGB_LED::update_state() {
 #endif
 
 void init_components(SDL_Renderer *renderer) {
-#define COMPONENT_LIST(f) f(led) f(switch) f(button) f(segs7) f(keyboard) f(vga) f(uart)
-#define INIT_FN(c) { void concat(init_, c)(SDL_Renderer *); concat(init_, c)(renderer); }
+#define COMPONENT_LIST(f)                                                      \
+  f(led) f(switch) f(button) f(segs7) f(keyboard) f(vga) f(uart)
+#define INIT_FN(c)                                                             \
+  {                                                                            \
+    void concat(init_, c)(SDL_Renderer *);                                     \
+    concat(init_, c)(renderer);                                                \
+  }
   COMPONENT_LIST(INIT_FN);
 }
 
 std::vector<Component *> components;
 
-void add_component(Component *c) {
-  components.push_back(c);
-}
+void add_component(Component *c) { components.push_back(c); }
 
 void delete_components() {
   for (auto comp_ptr : components) {
@@ -117,9 +103,13 @@ void delete_components() {
 
 // render buttons, switches, leds and 7-segs
 void init_gui(SDL_Renderer *renderer) {
-  for (auto ptr : components) { ptr->update_gui(); }
+  for (auto ptr : components) {
+    ptr->update_gui();
+  }
 }
 
 void update_components(SDL_Renderer *renderer) {
-  for (auto ptr : components) { ptr->update_state(); }
+  for (auto ptr : components) {
+    ptr->update_state();
+  }
 }

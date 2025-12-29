@@ -18,14 +18,13 @@
 
 // 3. Experimental Function
 
-//#define HARDWARE_ACC
+// #define HARDWARE_ACC
 
-//#define VSYNC
+// #define VSYNC
 
 // 4. Windows options
 
-#define WINDOW_WIDTH   (640 * 2)
-#define WINDOW_HEIGHT  (480 * 2)
-
+#define WINDOW_WIDTH (640 * 2)
+#define WINDOW_HEIGHT (480 * 2)
 
 #endif

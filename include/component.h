@@ -6,16 +6,20 @@
 
 // component type
 enum {
-  BUTTON_TYPE = 1, SWITCH_TYPE, NAIVE_LED_TYPE, RGB_LED_TYPE, SEGS7_TYPE,
-  VGA_TYPE, KEYBOARD_TYPE, UART_TYPE
+  BUTTON_TYPE = 1,
+  SWITCH_TYPE,
+  NAIVE_LED_TYPE,
+  RGB_LED_TYPE,
+  SEGS7_TYPE,
+  VGA_TYPE,
+  KEYBOARD_TYPE,
+  UART_TYPE
 };
 
 // logic type
-enum {
-  COMB_TYPE = 1, SEQ_TYPE = 2
-};
+enum { COMB_TYPE = 1, SEQ_TYPE = 2 };
 
-class Component{
+class Component {
 private:
   SDL_Renderer *m_renderer;
   int m_component_type;
@@ -55,9 +59,10 @@ public:
 };
 #endif
 
-class SEGS7 : public Component{
+class SEGS7 : public Component {
 private:
   bool is_len8;
+
 public:
   SEGS7(SDL_Renderer *rend, int cnt, int init_val, int ct, bool is_len8);
   virtual void update_gui();

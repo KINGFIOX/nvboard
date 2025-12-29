@@ -6,7 +6,7 @@
 #define BOARD_BG_COLOR 0x00008060
 
 static inline SDL_Point Point(int x, int y) {
-  return (SDL_Point){ .x = x, .y = y };
+  return (SDL_Point){.x = x, .y = y};
 }
 
 static inline SDL_Point operator+(const SDL_Point &A, const SDL_Point &B) {
@@ -18,7 +18,7 @@ static inline SDL_Point operator-(const SDL_Point &A, const SDL_Point &B) {
 }
 
 static inline SDL_Rect Rect(int x, int y, int w, int h) {
-  return (SDL_Rect){ .x = x, .y = y, .w = w, .h = h };
+  return (SDL_Rect){.x = x, .y = y, .w = w, .h = h};
 }
 
 static inline SDL_Rect Rect(const SDL_Point &top_left, int w, int h) {
@@ -35,7 +35,9 @@ static inline SDL_Rect operator+(const SDL_Rect &A, const SDL_Rect &B) {
 
 void draw_thicker_line(SDL_Renderer *renderer, const SDL_Point *point, int n);
 void draw_surrounding_line(SDL_Renderer *renderer, SDL_Rect r, int gap);
-void draw_str(SDL_Renderer *renderer, const char *str, int x, int y, uint32_t fg);
-void draw_str(SDL_Renderer *renderer, const char *str, int x, int y, uint32_t fg, uint32_t bg);
+void draw_str(SDL_Renderer *renderer, const char *str, int x, int y,
+              uint32_t fg);
+void draw_str(SDL_Renderer *renderer, const char *str, int x, int y,
+              uint32_t fg, uint32_t bg);
 
 #endif

@@ -2,10 +2,10 @@
 #define __UART_H__
 
 #include <component.h>
-#include <term.h>
 #include <string>
+#include <term.h>
 
-class UART : public Component{
+class UART : public Component {
 private:
   Term *term;
   int tx_state, rx_state;
@@ -14,8 +14,10 @@ private:
   std::string rx_sending_str;
   bool need_update_gui;
   uint8_t *p_tx;
+
 public:
-  UART(SDL_Renderer *rend, int cnt, int init_val, int ct, int x, int y, int w, int h);
+  UART(SDL_Renderer *rend, int cnt, int init_val, int ct, int x, int y, int w,
+       int h);
   ~UART();
   void set_divisor(uint16_t d);
 

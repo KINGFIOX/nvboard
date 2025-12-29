@@ -2,8 +2,8 @@
 #define __PINS_H__
 
 #include <../usr/include/pins.h>
-#include <stdint.h>
 #include <assert.h>
+#include <stdint.h>
 
 typedef struct PinNode {
   void *ptr;

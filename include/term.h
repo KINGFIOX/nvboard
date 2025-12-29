@@ -7,7 +7,8 @@ private:
   SDL_Rect region;
   int w_in_char, h_in_char;
   std::vector<uint8_t *> lines;
-  int cursor_x, cursor_y; // cursor_y start with all history when scrolling is supported
+  int cursor_x,
+      cursor_y; // cursor_y start with all history when scrolling is supported
   bool is_cursor_visible;
   bool is_focus;
   SDL_Texture *cursor_texture;
@@ -39,4 +40,3 @@ public:
 };
 
 #endif
-
