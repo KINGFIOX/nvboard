@@ -21,18 +21,17 @@ void KEYBOARD::push_key(uint8_t sdl_key, bool is_keydown) {
   Key *e = &keys[sdl_key];
   uint8_t at_key = e->map0;
   if (at_key == 0xe0) {
-    all_keys.push(0xe0);
+    all_keys.push(0xe0); // 拓展建
     at_key = e->map1;
   }
   if (!is_keydown)
-    all_keys.push(0xf0);
+    all_keys.push(0xf0); // 释放序列, [f0, <keycode>]
   all_keys.push(at_key);
   is_kb_idle = false;
 
   if (e->pressing != is_keydown) {
     e->pressing = is_keydown;
-    SDL_RenderCopy(get_renderer(), (is_keydown ? e->t_down : e->t_up), NULL,
-                   &e->rect);
+    SDL_RenderCopy(get_renderer(), (is_keydown ? e->t_down : e->t_up), NULL, &e->rect); // 画图
     set_redraw();
   }
 }
