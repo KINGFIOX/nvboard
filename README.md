@@ -31,7 +31,6 @@ NVBoard(NJU Virtual Board)是基于SDL开发的虚拟FPGA开发板，可以在Ve
 │   └── pic                 # 图片资源
 ├── scripts
 │   ├── auto_pin_bind.py    # 生成引脚绑定代码的脚本
-│   └── nvboard.mk          # NVBoard构建规则
 ├── src                     # NVBoard源码
 │   ├── at_scancode.h
 │   ├── button.cpp
@@ -52,6 +51,7 @@ NVBoard(NJU Virtual Board)是基于SDL开发的虚拟FPGA开发板，可以在Ve
 │   └── include           # 用于给外部项目包含的头文件
 │       ├── nvboard.h
 │       └── pins.h
+├── meson.build
 ├── LICENSE
 └── README.md
 ```
@@ -60,11 +60,8 @@ NVBoard(NJU Virtual Board)是基于SDL开发的虚拟FPGA开发板，可以在Ve
 
 1. 将项目拷贝到本地，`git clone https://github.com/NJU-ProjectN/nvboard.git`
 2. 通过`apt-get install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev` / `yum install SDL2-devel SDL2_image-devel SDL2_ttf-devel`安装SDL2，SDL2-image和SDL2-ttf；对于`macOS`，可以通过`brew install sdl2 sdl2_image sdl2_ttf`安装
-3. 把本项目的目录设置成环境变量`NVBOARD_HOME`
-
-## 示例
-
-`example`目录下包含一个示例项目，在该目录下通过 `make run` 命令可运行该项目。
+3. 安装 Meson 和 Ninja
+4. 构建项目：`meson setup build && ninja -C build`
 
 ## 接入verilator步骤
 
@@ -96,7 +93,7 @@ signal (pin1, pin2, ..., pink)
 `signal (pin1, pin2, ..., pink)`表示将顶层模块的`signal`信号的每一位从高到低依次绑定到`pin1, pin2, ..., pink`上。
 约束文件支持空行与行注释。
 
-2. 通过命令`python $(NVBOARD_HOME)/scripts/auto_pin_bind.py nxdc约束文件路径 auto_bind.cpp输出路径`来生成C++文件。
+2. 通过命令`python <nvboard源码目录>/scripts/auto_pin_bind.py nxdc约束文件路径 auto_bind.cpp输出路径`来生成C++文件。
 
 调用该文件中的`nvboard_bind_all_pins(dut)`函数即可完成所有信号的绑定。
 
@@ -133,13 +130,19 @@ nvboard_quit();
 
 ### 编译链接
 
-在Makefile中
-* 将生成的上述引脚绑定的C++文件加入源文件列表
-* 将NVBoard的构建脚本包含进来
-```
-include $(NVBOARD_HOME)/scripts/nvboard.mk
-```
-* 通过`make nvboard-archive`生成NVBoard的库文件
-* 在生成verilator仿真可执行文件(即`$(NVBOARD_ARCHIVE)`)将这个库文件加入链接过程，并添加链接选项`-lSDL2 -lSDL2_image`
+使用 Meson 构建时，将 NVBoard 作为 subproject 引入：
 
-可以参考示例项目中的Makefile文件，即`example/Makefile`
+```meson
+# 在 meson.build 中
+nvboard_dep = dependency('nvboard', fallback: ['nvboard', 'nvboard_dep'])
+# 在 executable() 中
+dependencies: [nvboard_dep, ...]
+```
+
+或将 NVBoard 源码置于 `subprojects/nvboard` 目录下，然后在 `meson.build` 中通过 `dependency('nvboard', fallback: ['nvboard', 'nvboard_dep'])` 引用。
+
+对于 Verilator 仿真项目，需要：
+* 将生成的引脚绑定 C++ 文件加入源文件列表
+* 链接 NVBoard 库并添加 SDL2 相关链接选项（`-lSDL2 -lSDL2_image -lSDL2_ttf`）
+
+可以参考示例项目的 `example/meson.build` 了解完整的 Verilator + NVBoard 集成方式。

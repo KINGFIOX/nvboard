@@ -1,6 +1,6 @@
 # 示例工程
 
-先设置环境变量`NVBOARD_HOME`为NVBoard项目的路径, 然后执行`make run`.
+在 NVBoard 项目根目录执行 `meson setup build && ninja -C build` 构建后，运行 `ninja -C build run` 或直接执行 `./build/example/top`。
 
 该示例的演示效果如下:
 1. 左边8个LED为流水灯效果
