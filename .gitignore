@@ -12,4 +12,6 @@
 !*.cpp
 !meson.build
 !meson_options.txt
+!.clangd
+!.clang-tidy
 build/

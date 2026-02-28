@@ -1,6 +1,9 @@
 #ifndef __TERM_H__
 #define __TERM_H__
 
+#include "SDL_render.h"
+#include <vector>
+
 class Term {
 private:
   SDL_Renderer *renderer;

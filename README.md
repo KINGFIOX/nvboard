@@ -60,8 +60,18 @@ NVBoard(NJU Virtual Board)是基于SDL开发的虚拟FPGA开发板，可以在Ve
 
 1. 将项目拷贝到本地，`git clone https://github.com/NJU-ProjectN/nvboard.git`
 2. 通过`apt-get install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev` / `yum install SDL2-devel SDL2_image-devel SDL2_ttf-devel`安装SDL2，SDL2-image和SDL2-ttf；对于`macOS`，可以通过`brew install sdl2 sdl2_image sdl2_ttf`安装
-3. 安装 Meson 和 Ninja
+3. 安装 Meson 和 Ninja（若尚未安装）：`pip install meson ninja` 或通过系统包管理器安装
 4. 构建项目：`meson setup build && ninja -C build`
+
+## 示例
+
+`example`目录下包含一个示例项目，构建完成后可通过以下方式运行：
+
+```bash
+ninja -C build run
+```
+
+或直接执行生成的可执行文件：`./build/example/top`
 
 ## 接入verilator步骤
 

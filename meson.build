@@ -1,7 +1,7 @@
 project('nvboard', 'cpp',
   version: '0.1.0',
   meson_version: '>=0.56.0',
-  default_options: ['cpp_std=c++17', 'optimization=3'],
+  default_options: ['cpp_std=c++17', 'optimization=2'],
 )
 
 sdl2_dep = dependency('sdl2')
@@ -25,13 +25,12 @@ nvboard_sources = [
   'src/vga.cpp',
 ]
 
-nvboard_inc = include_directories('include', 'usr/include')
+nvboard_inc = include_directories('include')
 
 nvboard_lib = static_library('nvboard',
   nvboard_sources,
   include_directories: nvboard_inc,
   dependencies: [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep],
-  cpp_args: ['-O3'],
 )
 
 nvboard_dep = declare_dependency(
