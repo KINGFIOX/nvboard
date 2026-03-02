@@ -33,17 +33,15 @@ nvboard_lib = static_library('nvboard',
   dependencies: [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep],
 )
 
+# ================================================
+# declare dependency for subproject which wants to link nvboard library
+# ================================================
 nvboard_dep = declare_dependency(
   link_with: nvboard_lib,
   include_directories: nvboard_inc,
   dependencies: [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep],
 )
-
-# 供 subproject 使用
 meson.override_dependency('nvboard', nvboard_dep)
 
-# 可选构建示例项目
-examples_enabled = get_option('examples')
-if examples_enabled
-  subdir('example')
-endif
+# for subproject to get nvboard source code root directory (for scripts, usr/include, etc.)
+nvboard_src_root = meson.current_source_dir()

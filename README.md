@@ -65,13 +65,21 @@ NVBoard(NJU Virtual Board)是基于SDL开发的虚拟FPGA开发板，可以在Ve
 
 ## 示例
 
-`example`目录下包含一个示例项目，构建完成后可通过以下方式运行：
+`example` 目录是一个**独立项目**，以 subproject 形式引用 nvboard。构建方式：
 
 ```bash
+cd example
+meson setup build
+ninja -C build
 ninja -C build run
 ```
 
-或直接执行生成的可执行文件：`./build/example/top`
+或直接执行生成的可执行文件：`./example/build/top`
+
+在 nvboard 源码根目录下构建时，可先创建符号链接以使用本地 nvboard（避免重复克隆）：
+```bash
+cd example && ln -sf ../.. subprojects/nvboard
+```
 
 ## 接入verilator步骤
 
