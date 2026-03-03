@@ -106,7 +106,10 @@ void Term::backspace(bool is_input) {
 }
 
 void Term::feed_ch(uint8_t ch) {
-  assert(ch < 128);
+  // UART 可能传输任意 8 位字节，但终端只支持 7 位 ASCII 显示
+  // 对非 ASCII 字符用 '?' 替换，避免 font_texture_term 越界
+  if (ch >= 128)
+    ch = '?';
   if (is_cursor_on_screen())
     set_dirty_char(cursor_y - screen_y, cursor_x);
   int y = cursor_y;
