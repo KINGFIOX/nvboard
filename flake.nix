@@ -1,11 +1,11 @@
 {
   description = "NVBoard - NJU Virtual Board (SDL-based FPGA board simulation for Verilator)";
 
-  inputs.nixpkgs.url = "nixpkgs";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs = { self, nixpkgs }:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       pkgsFor = system: import nixpkgs { inherit system; };
     in
@@ -46,10 +46,7 @@
 
             installPhase = ''
               runHook preInstall
-              mkdir -p $out/lib $out/include $out/usr/include
-              cp build/libnvboard.a $out/lib/
-              cp -r include/* $out/include/
-              cp -r usr/include/* $out/usr/include/
+              ninja -C build install
               runHook postInstall
             '';
 

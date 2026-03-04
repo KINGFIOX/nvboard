@@ -31,6 +31,7 @@ nvboard_lib = static_library('nvboard',
   nvboard_sources,
   include_directories: nvboard_inc,
   dependencies: [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep],
+  install: true,
 )
 
 # ================================================
@@ -42,6 +43,9 @@ nvboard_dep = declare_dependency(
   dependencies: [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep],
 )
 meson.override_dependency('nvboard', nvboard_dep)
+
+# 仅安装对外头文件 usr/include，include 为内部头文件不安装
+install_subdir('usr/include', install_dir: join_paths(get_option('prefix'), 'usr/include'), strip_directory: true)
 
 # for subproject to get nvboard source code root directory (for scripts, usr/include, etc.)
 nvboard_src_root = meson.current_source_dir()
