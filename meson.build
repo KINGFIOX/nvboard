@@ -47,5 +47,8 @@ meson.override_dependency('nvboard', nvboard_dep)
 # 仅安装对外头文件 usr/include，include 为内部头文件不安装
 install_subdir('usr/include', install_dir: join_paths(get_option('prefix'), 'usr/include'), strip_directory: true)
 
+# 安装运行时资源（字体、图片），font.cpp 与 render.cpp 通过 NVBOARD_HOME/resources/ 加载
+install_subdir('resources', install_dir: get_option('prefix'), strip_directory: false)
+
 # for subproject to get nvboard source code root directory (for scripts, usr/include, etc.)
 nvboard_src_root = meson.current_source_dir()
