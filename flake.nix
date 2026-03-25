@@ -10,19 +10,14 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        nvboardPkg = pkgs.stdenv.mkDerivation {
+        stdenv = pkgs.llvmPackages.libcxxStdenv;
+        nvboardPkg = stdenv.mkDerivation {
+          src = self;
           pname = "nvboard";
           version = "0.1.0";
-          src = self;
-
           nativeBuildInputs = with pkgs; [ meson ninja pkg-config ];
           buildInputs = with pkgs; [ SDL2 SDL2_image SDL2_ttf ];
-
           mesonBuildType = "release";
-
-          passthru = {
-            inherit (pkgs) SDL2 SDL2_image SDL2_ttf;
-          };
         };
       in
       {
@@ -31,7 +26,7 @@
           nvboard = nvboardPkg;
         };
 
-        devShells.default = pkgs.mkShell {
+        devShells.default = pkgs.mkShell.override { inherit stdenv; } {
           buildInputs = with pkgs; [
             SDL2
             SDL2_image
