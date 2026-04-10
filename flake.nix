@@ -15,6 +15,8 @@
           src = self;
           pname = "nvboard";
           version = "0.1.0";
+          # If there is cmake+ninja in nativeBuildInputs,
+          # Nix would get into compilation automatically.
           nativeBuildInputs = with pkgs; [ cmake ninja pkg-config ];
           buildInputs = with pkgs; [ SDL2 SDL2_image SDL2_ttf abseil-cpp ];
         };
