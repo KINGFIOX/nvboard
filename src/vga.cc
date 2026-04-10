@@ -4,28 +4,18 @@
 
 #include "absl/base/optimization.h"
 #include "absl/log/absl_check.h"
+#include "src/internal/board_impl.h"
 #include "src/internal/macro.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
 
-namespace {
-
-Vga *vga_instance = nullptr;
-Vga *&vga = vga_instance;
-
-int vga_clk_cycle_minus_1 = 0;
-
-}  // namespace
-
-uint8_t *vga_blank_n_ptr = nullptr;
-
 VgaMode vga_mod_accepted[kNrVgaMode] = {
     {96, 144, 784, 800, 2, 35, 515, 525},
 };
 
-Vga::Vga(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct)
-    : Component(rend, cnt, init_val, ct),
+Vga::Vga(BoardImpl *board, int cnt, int init_val, ComponentType ct)
+    : Component(board, cnt, init_val, ct),
       vga_screen_width_(kVgaDefaultWidth),
       vga_screen_height_(kVgaDefaultHeight),
       vga_clk_cnt_(1),
@@ -33,7 +23,7 @@ Vga::Vga(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct)
       ext_fb_w_(0),
       ext_fb_h_(0) {
   SDL_Texture *vga_texture = SDL_CreateTexture(
-      rend, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+      board->renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
       vga_screen_width_, vga_screen_height_);
   SetTexture(vga_texture, 0);
   pixels_ = new uint32_t[vga_screen_width_ * vga_screen_height_];
@@ -46,18 +36,22 @@ Vga::Vga(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct)
   SetRect(rect_ptr, 0);
   SDL_UpdateTexture(vga_texture, nullptr, pixels_,
                     vga_screen_width_ * sizeof(uint32_t));
-  SDL_RenderCopy(rend, vga_texture, nullptr, rect_ptr);
+  SDL_RenderCopy(board->renderer_, vga_texture, nullptr, rect_ptr);
 
-  is_r_len8_ = pin_array[VGA_R0].vector_len == 8;
-  is_g_len8_ = pin_array[VGA_G0].vector_len == 8;
-  is_b_len8_ = pin_array[VGA_B0].vector_len == 8;
+  is_r_len8_ = board_->pin_array_[VGA_R0].vector_len == 8;
+  is_g_len8_ = board_->pin_array_[VGA_G0].vector_len == 8;
+  is_b_len8_ = board_->pin_array_[VGA_B0].vector_len == 8;
   is_all_len8_ = is_r_len8_ && is_g_len8_ && is_b_len8_;
-  if (is_r_len8_) p_r_ = static_cast<uint8_t *>(pin_array[VGA_R0].ptr);
-  if (is_g_len8_) p_g_ = static_cast<uint8_t *>(pin_array[VGA_G0].ptr);
-  if (is_b_len8_) p_b_ = static_cast<uint8_t *>(pin_array[VGA_B0].ptr);
-  int vga_blank_n_len = pin_array[VGA_BLANK_N].vector_len;
+  if (is_r_len8_)
+    p_r_ = static_cast<uint8_t *>(board_->pin_array_[VGA_R0].ptr);
+  if (is_g_len8_)
+    p_g_ = static_cast<uint8_t *>(board_->pin_array_[VGA_G0].ptr);
+  if (is_b_len8_)
+    p_b_ = static_cast<uint8_t *>(board_->pin_array_[VGA_B0].ptr);
+  int vga_blank_n_len = board_->pin_array_[VGA_BLANK_N].vector_len;
   ABSL_CHECK(vga_blank_n_len == 1 || vga_blank_n_len == 0);
-  vga_blank_n_ptr = static_cast<uint8_t *>(pin_array[VGA_BLANK_N].ptr);
+  board_->vga_blank_n_ptr_ =
+      static_cast<uint8_t *>(board_->pin_array_[VGA_BLANK_N].ptr);
   p_pixel_ = pixels_;
   p_pixel_end_ = pixels_ + vga_screen_width_ * vga_screen_height_;
 }
@@ -72,14 +66,14 @@ void Vga::UpdateGui() {
   SDL_UpdateTexture(vga_texture, nullptr, pixels_,
                     vga_screen_width_ * sizeof(uint32_t));
   SDL_RenderCopy(GetRenderer(), vga_texture, nullptr, GetRect(0));
-  SetRedraw();
+  board_->SetRedraw();
 }
 
 uint32_t Vga::GetPixelColorSlowpath() {
 #define NVBOARD_CONCAT3(a, b, c) NVBOARD_CONCAT(NVBOARD_CONCAT(a, b), c)
 #define NVBOARD_MAP2(c, f, x) c(f, x)
 #define GET_COLOR_BIT(color, n) \
-  (PinPeek(NVBOARD_CONCAT3(VGA_, color, n)) << n)
+  (board_->PinPeek(NVBOARD_CONCAT3(VGA_, color, n)) << n)
 #define BITS(f, color)                                                         \
   f(color, 0) f(color, 1) f(color, 2) f(color, 3) f(color, 4) f(color, 5)    \
       f(color, 6) f(color, 7)
@@ -107,12 +101,12 @@ __attribute__((noinline)) void Vga::FinishOneFrame() {
 }
 
 void Vga::UpdateState() {
-  if (ABSL_PREDICT_FALSE(vga_clk_cycle_minus_1 > 0)) {
+  if (ABSL_PREDICT_FALSE(board_->vga_clk_cycle_minus_1_ > 0)) {
     if (vga_clk_cnt_ > 0) {
       vga_clk_cnt_--;
       return;
     }
-    vga_clk_cnt_ = vga_clk_cycle_minus_1;
+    vga_clk_cnt_ = board_->vga_clk_cycle_minus_1_;
   }
 
   uint32_t color = 0;
@@ -147,10 +141,6 @@ void Vga::SyncFromFramebuffer() {
   UpdateGui();
 }
 
-void VgaSetClkCycle(int cycle) { vga_clk_cycle_minus_1 = cycle - 1; }
-
-Vga *&GetVgaInstance() { return vga_instance; }
-
 namespace {
 
 void InitRenderLocal(SDL_Renderer *renderer) {
@@ -167,14 +157,12 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-void InitVga(SDL_Renderer *renderer) {
-  InitRenderLocal(renderer);
-  vga = new Vga(renderer, 1, 0, ComponentType::kVga);
+void InitVga(BoardImpl *impl) {
+  InitRenderLocal(impl->renderer_);
+  impl->vga_device_ = new Vga(impl, 1, 0, ComponentType::kVga);
   for (int p = VGA_VSYNC; p <= VGA_B7; p++) {
-    vga->AddPin(p);
+    impl->vga_device_->AddPin(p);
   }
 }
-
-void VgaUpdate() { vga->UpdateState(); }
 
 }  // namespace nvboard

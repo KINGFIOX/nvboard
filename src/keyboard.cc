@@ -4,26 +4,13 @@
 
 #include "absl/log/absl_check.h"
 #include "src/internal/at_scancode.h"
+#include "src/internal/board_impl.h"
 #include "src/internal/font.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
 
 namespace {
-
-struct Key {
-  SDL_Texture *t_up = nullptr;
-  SDL_Texture *t_down = nullptr;
-  SDL_Rect rect = {};
-  uint8_t map0 = 0;
-  uint8_t map1 = 0;
-  bool pressing = false;
-};
-
-Keyboard *kb_instance = nullptr;
-Keyboard *&kb = kb_instance;
-bool is_kb_idle = true;
-Key keys[256] = {};
 
 SDL_Surface *NewKeyShape(int w, int h) {
   SDL_Surface *s = SDL_CreateRGBSurface(0, w, h, 32, 0xff0000, 0x00ff00,
@@ -44,7 +31,8 @@ SDL_Surface *NewKeyShape(int w, int h) {
 SDL_Surface *SurfaceDup(SDL_Surface *src, uint32_t bg) {
   SDL_PixelFormat *f = src->format;
   SDL_Surface *s = SDL_CreateRGBSurface(0, src->w, src->h, f->BitsPerPixel,
-                                        f->Rmask, f->Gmask, f->Bmask, f->Amask);
+                                        f->Rmask, f->Gmask, f->Bmask,
+                                        f->Amask);
   SDL_FillRect(s, nullptr, bg);
   SDL_BlitSurface(src, nullptr, s, nullptr);
   return s;
@@ -66,16 +54,16 @@ SDL_Texture *GenKeyTexture(SDL_Renderer *renderer, const char *desc1,
   return t;
 }
 
-void InitKeyTexture(SDL_Renderer *renderer, uint8_t sdl_key,
-                    const char *desc1, const char *desc2,
-                    SDL_Surface *key_shape, int x, int y) {
-  Key *e = &keys[sdl_key];
-  e->t_up = GenKeyTexture(renderer, desc1, desc2, key_shape, false);
-  e->t_down = GenKeyTexture(renderer, desc1, desc2, key_shape, true);
+void InitKeyTexture(BoardImpl *impl, uint8_t sdl_key, const char *desc1,
+                    const char *desc2, SDL_Surface *key_shape, int x, int y) {
+  Key *e = &impl->keys_[sdl_key];
+  e->t_up = GenKeyTexture(impl->renderer_, desc1, desc2, key_shape, false);
+  e->t_down = GenKeyTexture(impl->renderer_, desc1, desc2, key_shape, true);
   e->rect = SDL_Rect{x, y, key_shape->w, key_shape->h};
 }
 
-void InitRenderLocal(SDL_Renderer *renderer) {
+void InitRenderLocal(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
   constexpr int kKeyUnitWidth = 34;
   constexpr int kKeyGap = kKeyUnitWidth / 14;
   constexpr int kHKeyboard =
@@ -101,10 +89,10 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 #define NVBOARD_KEY_ENTRY(k, desc1, desc2, width)                              \
   do {                                                                         \
     int idx = SDL_PREFIX(NVBOARD_CONCAT(_, k));                                \
-    InitKeyTexture(renderer, idx, desc1, desc2,                                \
-                   NVBOARD_CONCAT(s_, width), x, y);                           \
+    InitKeyTexture(impl, idx, desc1, desc2, NVBOARD_CONCAT(s_, width), x, y);  \
     x += NVBOARD_CONCAT(s_, width)->w + kKeyGap;                              \
-    SDL_RenderCopy(renderer, keys[idx].t_up, nullptr, &keys[idx].rect);        \
+    SDL_RenderCopy(renderer, impl->keys_[idx].t_up, nullptr,                   \
+                   &impl->keys_[idx].rect);                                    \
   } while (0)
 
 #define NVBOARD_NEXTLINE()                                                     \
@@ -242,8 +230,8 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-Keyboard::Keyboard(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct)
-    : Component(rend, cnt, init_val, ct),
+Keyboard::Keyboard(BoardImpl *board, int cnt, int init_val, ComponentType ct)
+    : Component(board, cnt, init_val, ct),
       data_idx_(0),
       left_clk_(0),
       cur_key_(kNotAKey) {}
@@ -258,7 +246,7 @@ uint8_t Keyboard::DequeueScancode() {
 }
 
 void Keyboard::PushKey(uint8_t sdl_key, bool is_keydown) {
-  Key *e = &keys[sdl_key];
+  Key *e = &board_->keys_[sdl_key];
   uint8_t at_key = e->map0;
   if (at_key == 0xe0) {
     all_keys_.push(0xe0);
@@ -271,20 +259,20 @@ void Keyboard::PushKey(uint8_t sdl_key, bool is_keydown) {
   }
   all_keys_.push(at_key);
   virtual_keys_.push(at_key);
-  is_kb_idle = false;
+  board_->is_kb_idle_ = false;
 
   if (e->pressing != is_keydown) {
     e->pressing = is_keydown;
     SDL_RenderCopy(GetRenderer(), (is_keydown ? e->t_down : e->t_up), nullptr,
                    &e->rect);
-    SetRedraw();
+    board_->SetRedraw();
   }
 }
 
 void Keyboard::UpdateState() {
   if (cur_key_ == kNotAKey) {
     if (all_keys_.empty()) {
-      is_kb_idle = true;
+      board_->is_kb_idle_ = true;
       return;
     }
     cur_key_ = all_keys_.front();
@@ -293,9 +281,9 @@ void Keyboard::UpdateState() {
   }
 
   if (left_clk_ == 0) {
-    uint8_t ps2_clk = PinPeek(PS2_CLK);
+    uint8_t ps2_clk = board_->PinPeek(PS2_CLK);
     ps2_clk = !ps2_clk;
-    PinPoke(PS2_CLK, ps2_clk);
+    board_->PinPoke(PS2_CLK, ps2_clk);
     left_clk_ = kClkNum;
     if (ps2_clk) {
       ABSL_CHECK(!all_keys_.empty());
@@ -307,7 +295,7 @@ void Keyboard::UpdateState() {
                     : ((data_idx_ >= kPs2Data0) && (data_idx_ <= kPs2Data7))
                           ? (cur_key_ & 1)
                           : 0;
-      PinPoke(PS2_DAT, ps2_dat);
+      board_->PinPoke(PS2_DAT, ps2_dat);
       if ((data_idx_ >= kPs2Data0) && (data_idx_ <= kPs2Data7))
         cur_key_ >>= 1;
       data_idx_++;
@@ -321,27 +309,18 @@ void Keyboard::UpdateState() {
   }
 }
 
-Keyboard *&GetKbInstance() { return kb_instance; }
-bool &IsKbIdle() { return is_kb_idle; }
-
-void InitKeyboard(SDL_Renderer *renderer) {
-  InitRenderLocal(renderer);
-  kb = new Keyboard(renderer, 0, 0, ComponentType::kKeyboard);
+void InitKeyboard(BoardImpl *impl) {
+  InitRenderLocal(impl);
+  impl->keyboard_ = new Keyboard(impl, 0, 0, ComponentType::kKeyboard);
   for (int p = PS2_CLK; p <= PS2_DAT; p++) {
-    kb->AddPin(p);
+    impl->keyboard_->AddPin(p);
   }
-#define FILL_KEYMAP0(a) keys[SDL_PREFIX(a)].map0 = GET_FIRST(AT_PREFIX(a));
-#define FILL_KEYMAP1(a) keys[SDL_PREFIX(a)].map1 = GET_SECOND(AT_PREFIX(a));
+#define FILL_KEYMAP0(a) impl->keys_[SDL_PREFIX(a)].map0 = GET_FIRST(AT_PREFIX(a));
+#define FILL_KEYMAP1(a) impl->keys_[SDL_PREFIX(a)].map1 = GET_SECOND(AT_PREFIX(a));
   NVBOARD_MAP(SCANCODE_LIST, FILL_KEYMAP0)
   NVBOARD_MAP(SCANCODE_LIST, FILL_KEYMAP1)
 #undef FILL_KEYMAP0
 #undef FILL_KEYMAP1
-}
-
-void KbUpdate() { kb->UpdateState(); }
-
-void KbPushKey(uint8_t scancode, bool is_keydown) {
-  kb->PushKey(scancode, is_keydown);
 }
 
 }  // namespace nvboard

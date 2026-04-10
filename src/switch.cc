@@ -43,12 +43,13 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-void InitSwitch(SDL_Renderer *renderer) {
-  SDL_Texture *tswitch_on = LoadPicTexture(renderer, kVswOnPath);
-  SDL_Texture *tswitch_off = LoadPicTexture(renderer, kVswOffPath);
+void InitSwitch(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
+  SDL_Texture *tswitch_on = LoadPicTexture(impl, kVswOnPath);
+  SDL_Texture *tswitch_off = LoadPicTexture(impl, kVswOffPath);
   InitRenderLocal(renderer);
   for (int i = 0; i < 16; ++i) {
-    auto *ptr = new Component(renderer, 2, 0, ComponentType::kSwitch);
+    auto *ptr = new Component(impl, 2, 0, ComponentType::kSwitch);
 
     auto *rect_ptr = new SDL_Rect;
     *rect_ptr =
@@ -65,7 +66,7 @@ void InitSwitch(SDL_Renderer *renderer) {
     ptr->SetTexture(tswitch_on, 1);
 
     ptr->AddPin(SW0 + i);
-    AddComponent(ptr);
+    impl->AddComponent(ptr);
   }
 }
 

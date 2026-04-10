@@ -7,6 +7,7 @@
 
 #include "absl/log/absl_check.h"
 #include "absl/strings/str_cat.h"
+#include "src/internal/board_impl.h"
 #include "src/internal/configs.h"
 #include "src/internal/render.h"
 
@@ -20,21 +21,19 @@ SDL_Texture *font_texture_term[128] = {nullptr};
 }  // namespace
 
 SDL_Texture *Surface2Texture(SDL_Renderer *renderer, SDL_Surface *s);
-SDL_Texture *nvboard_texture = nullptr;
 
-void InitFont(SDL_Renderer *renderer) {
+void InitFont(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
   int ret = TTF_Init();
   ABSL_CHECK_NE(ret, -1);
-  const char *home = std::getenv("NVBOARD_HOME");
-  ABSL_CHECK(home != nullptr) << "NVBOARD_HOME environment variable not set";
   std::string font_path =
-      absl::StrCat(home, "/resources/font/FreeMono.ttf");
+      absl::StrCat(impl->nvboard_home_, "/resources/font/FreeMono.ttf");
 
   font = TTF_OpenFont(font_path.c_str(), 48);
   ABSL_CHECK(font != nullptr) << "Failed to open font: " << font_path;
   TTF_SetFontHinting(font, TTF_HINTING_MONO);
   TTF_SetFontStyle(font, TTF_STYLE_BOLD);
-  nvboard_texture =
+  impl->nvboard_texture_ =
       Str2Texture(renderer, "NVBoard", 0xffffff, kBoardBgColor);
 
   TTF_SetFontSize(font, kChHeight);

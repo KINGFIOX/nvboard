@@ -8,9 +8,11 @@
 
 namespace nvboard {
 
+class BoardImpl;
+
 class Term {
  public:
-  Term(SDL_Renderer *r, int x, int y, int w, int h);
+  Term(BoardImpl *board, int x, int y, int w, int h);
   ~Term();
   void FeedCh(uint8_t ch);
   void Backspace(bool is_input);
@@ -30,6 +32,7 @@ class Term {
   void SetDirtyChar(int y, int x);
   void InitDirty(bool val);
 
+  BoardImpl *board_;
   SDL_Renderer *renderer_;
   SDL_Rect region_;
   int w_in_char_;

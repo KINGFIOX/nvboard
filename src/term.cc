@@ -3,13 +3,15 @@
 #include <cstring>
 
 #include "absl/log/absl_check.h"
+#include "src/internal/board_impl.h"
 #include "src/internal/font.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
 
-Term::Term(SDL_Renderer *r, int x, int y, int w, int h)
-    : renderer_(r),
+Term::Term(BoardImpl *board, int x, int y, int w, int h)
+    : board_(board),
+      renderer_(board->renderer_),
       cursor_x_(0),
       cursor_y_(0),
       is_cursor_visible_(true),
@@ -19,8 +21,9 @@ Term::Term(SDL_Renderer *r, int x, int y, int w, int h)
   w_in_char_ = region_.w / kChWidth;
   h_in_char_ = region_.h / kChHeight;
   AddLine();
-  cursor_texture_ = NewTexture(r, kChWidth, kChHeight, 0x10, 0x10, 0x10);
-  focus_cursor_texture_ = NewTexture(r, kChWidth, kChHeight, 0xff, 0x00, 0xff);
+  cursor_texture_ = NewTexture(renderer_, kChWidth, kChHeight, 0x10, 0x10, 0x10);
+  focus_cursor_texture_ =
+      NewTexture(renderer_, kChWidth, kChHeight, 0xff, 0x00, 0xff);
   ClearScreen();
   DrawCursor();
   dirty_line_ = new bool[h_in_char_];
@@ -66,7 +69,7 @@ void Term::Clear() {
   cursor_x_ = cursor_y_ = screen_y_ = 0;
   ClearScreen();
   InitDirty(false);
-  SetRedraw();
+  board_->SetRedraw();
 }
 
 void Term::Newline() {
@@ -155,7 +158,7 @@ void Term::DrawCursor() {
                          ? (is_focus_ ? focus_cursor_texture_ : cursor_texture_)
                          : Ch2TextureTerm(' ');
     SDL_RenderCopy(renderer_, t, nullptr, &rect);
-    SetRedraw();
+    board_->SetRedraw();
   }
 }
 
@@ -178,7 +181,7 @@ void Term::UpdateGui() {
       rect.x = region_.x + rect.w * x;
       SDL_Texture *t = Ch2TextureTerm(ch);
       SDL_RenderCopy(renderer_, t, nullptr, &rect);
-      SetRedraw();
+      board_->SetRedraw();
     }
   }
   DrawCursor();

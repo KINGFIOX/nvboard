@@ -22,7 +22,7 @@ struct VgaMode {
 
 class Vga : public Component {
  public:
-  Vga(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct);
+  Vga(BoardImpl *board, int cnt, int init_val, ComponentType ct);
   ~Vga() override;
 
   void UpdateGui() override;

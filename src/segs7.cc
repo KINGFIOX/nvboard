@@ -118,9 +118,9 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-Segs7::Segs7(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct,
+Segs7::Segs7(BoardImpl *board, int cnt, int init_val, ComponentType ct,
              bool is_len8)
-    : Component(rend, cnt, init_val, ct), is_len8_(is_len8) {}
+    : Component(board, cnt, init_val, ct), is_len8_(is_len8) {}
 
 void Segs7::UpdateGui() {
   int newval = GetState();
@@ -129,16 +129,16 @@ void Segs7::UpdateGui() {
     SDL_RenderCopy(GetRenderer(), GetTexture(texture_idx), nullptr,
                    GetRect(texture_idx));
   }
-  SetRedraw();
+  board_->SetRedraw();
 }
 
 void Segs7::UpdateState() {
   int newval = 0;
   if (is_len8_) {
-    newval = PinPeek8(GetPin());
+    newval = board_->PinPeek8(GetPin());
   } else {
     for (int i = 0; i < 8; ++i) {
-      newval |= (PinPeek(GetPin(7 - i)) << i);
+      newval |= (board_->PinPeek(GetPin(7 - i)) << i);
     }
   }
   if (newval != GetState()) {
@@ -147,15 +147,16 @@ void Segs7::UpdateState() {
   }
 }
 
-void InitSegs7(SDL_Renderer *renderer) {
+void InitSegs7(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
   InitRenderLocal(renderer);
   for (int i = 0; i < 8; ++i) {
     SDL_Rect mv = {kSegX + kSegSep +
                        (7 - i) * (kSegHorWidth + kSegDotWidth +
                                   kSegVerWidth * 2 + kSegSep * 2),
                    kSegY + kSegSep, 0, 0};
-    bool is_len8 = (pin_array[GetSegA(i)].vector_len == 8);
-    auto *ptr = new Segs7(renderer, 16, 0x5555, ComponentType::kSegs7, is_len8);
+    bool is_len8 = (impl->pin_array_[GetSegA(i)].vector_len == 8);
+    auto *ptr = new Segs7(impl, 16, 0x5555, ComponentType::kSegs7, is_len8);
     for (int j = 0; j < 8; ++j) {
       auto *rect_ptr = new SDL_Rect;
       *rect_ptr = mv + kSegsRect[j];
@@ -170,7 +171,7 @@ void InitSegs7(SDL_Renderer *renderer) {
     for (int p = GetSegA(i); p <= GetDecP(i); p++) {
       ptr->AddPin(p);
     }
-    AddComponent(ptr);
+    impl->AddComponent(ptr);
   }
 }
 

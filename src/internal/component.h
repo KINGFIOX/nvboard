@@ -8,6 +8,8 @@
 
 namespace nvboard {
 
+class BoardImpl;
+
 enum class ComponentType {
   kButton = 1,
   kSwitch,
@@ -23,7 +25,7 @@ enum class LogicType { kComb = 1, kSeq = 2 };
 
 class Component {
  public:
-  Component(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct);
+  Component(BoardImpl *board, int cnt, int init_val, ComponentType ct);
   virtual ~Component() = default;
 
   bool InRect(int x, int y) const;
@@ -42,10 +44,10 @@ class Component {
   virtual void UpdateState();
   void Remove();
 
-  friend void DeleteComponents();
+ protected:
+  BoardImpl *board_;
 
  private:
-  SDL_Renderer *renderer_;
   ComponentType component_type_;
   std::vector<SDL_Rect *> rects_;
   std::vector<SDL_Texture *> textures_;
@@ -55,7 +57,7 @@ class Component {
 
 class Segs7 : public Component {
  public:
-  Segs7(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct,
+  Segs7(BoardImpl *board, int cnt, int init_val, ComponentType ct,
         bool is_len8);
   void UpdateGui() override;
   void UpdateState() override;
@@ -64,12 +66,7 @@ class Segs7 : public Component {
   bool is_len8_;
 };
 
-void InitComponents(SDL_Renderer *renderer);
-void InitGui(SDL_Renderer *renderer);
-
-void AddComponent(Component *c);
-void UpdateComponents(SDL_Renderer *renderer);
-void DeleteComponents();
+void InitComponents(BoardImpl *impl);
 
 }  // namespace nvboard
 

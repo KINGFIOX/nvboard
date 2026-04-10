@@ -57,7 +57,8 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-void InitLed(SDL_Renderer *renderer) {
+void InitLed(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
   SDL_Texture *tled_off =
       NewTexture(renderer, kLedWidth, kLedHeight, 0x7f, 0x7f, 0x7f);
   SDL_Texture *tled_g =
@@ -65,7 +66,7 @@ void InitLed(SDL_Renderer *renderer) {
   InitRenderLocal(renderer);
 
   for (int i = 0; i < 16; ++i) {
-    auto *ptr = new Component(renderer, 2, 0, ComponentType::kNaiveLed);
+    auto *ptr = new Component(impl, 2, 0, ComponentType::kNaiveLed);
 
     auto *rect_ptr = new SDL_Rect;
     *rect_ptr = SDL_Rect{kLedX + (15 - i) * (kLedWidth + kLedSep), kLedY,
@@ -80,7 +81,7 @@ void InitLed(SDL_Renderer *renderer) {
     ptr->SetTexture(tled_g, 1);
 
     ptr->AddPin(LD0 + i);
-    AddComponent(ptr);
+    impl->AddComponent(ptr);
   }
 }
 

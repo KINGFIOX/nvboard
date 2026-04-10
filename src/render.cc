@@ -11,11 +11,9 @@ namespace nvboard {
 
 namespace {
 
-std::string nvboard_home;
-
-SDL_Texture *LoadTexture(SDL_Renderer *renderer, const std::string &path) {
-  SDL_Texture *t =
-      IMG_LoadTexture(renderer, absl::StrCat(nvboard_home, path).c_str());
+SDL_Texture *LoadTexture(BoardImpl *impl, const std::string &path) {
+  SDL_Texture *t = IMG_LoadTexture(
+      impl->renderer_, absl::StrCat(impl->nvboard_home_, path).c_str());
   ABSL_CHECK(t != nullptr) << "Failed to load texture: " << path;
   return t;
 }
@@ -29,8 +27,8 @@ void DrawStrInternal(SDL_Renderer *renderer, SDL_Texture *t, const char *str,
 
 }  // namespace
 
-SDL_Texture *LoadPicTexture(SDL_Renderer *renderer, std::string path) {
-  return LoadTexture(renderer, absl::StrCat("/resources/pic/", path));
+SDL_Texture *LoadPicTexture(BoardImpl *impl, const std::string &path) {
+  return LoadTexture(impl, absl::StrCat("/resources/pic/", path));
 }
 
 SDL_Texture *Surface2Texture(SDL_Renderer *renderer, SDL_Surface *s) {
@@ -89,22 +87,20 @@ void DrawStr(SDL_Renderer *renderer, const char *str, int x, int y,
   DrawStrInternal(renderer, t, str, x, y);
 }
 
-void InitRender(SDL_Renderer *renderer) {
-  const char *home = std::getenv("NVBOARD_HOME");
-  ABSL_CHECK(home != nullptr) << "NVBOARD_HOME environment variable not set";
-  nvboard_home = home;
+void InitRender(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
 
   SDL_Rect rect_bg = {0, 0, kWindowWidth / 2, kWindowHeight / 2};
   SDL_SetRenderDrawColor(renderer, (kBoardBgColor >> 16) & 0xff,
                          (kBoardBgColor >> 8) & 0xff, kBoardBgColor & 0xff, 0);
   SDL_RenderFillRect(renderer, &rect_bg);
 
-  extern SDL_Texture *nvboard_texture;
   int w, h;
-  SDL_QueryTexture(nvboard_texture, nullptr, nullptr, &w, &h);
+  SDL_QueryTexture(impl->nvboard_texture_, nullptr, nullptr, &w, &h);
   SDL_Rect r = MakeRect(60, 140, w, h);
-  SDL_RenderCopy(renderer, nvboard_texture, nullptr, &r);
-  SDL_DestroyTexture(nvboard_texture);
+  SDL_RenderCopy(renderer, impl->nvboard_texture_, nullptr, &r);
+  SDL_DestroyTexture(impl->nvboard_texture_);
+  impl->nvboard_texture_ = nullptr;
 
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0);
   SDL_Point p[2];
@@ -115,8 +111,8 @@ void InitRender(SDL_Renderer *renderer) {
   p[1].y += 4;
   DrawThickerLine(renderer, p, 2);
 
-  DrawStr(renderer, NVBOARD_VERSION_STR, 60 + w + kChWidth, 140 + h - kChHeight,
-          0xffffff);
+  DrawStr(renderer, NVBOARD_VERSION_STR, 60 + w + kChWidth,
+          140 + h - kChHeight, 0xffffff);
 }
 
 }  // namespace nvboard

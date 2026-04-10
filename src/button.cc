@@ -48,13 +48,14 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-void InitButton(SDL_Renderer *renderer) {
-  SDL_Texture *tbutton_on = LoadPicTexture(renderer, kVbtnOnPath);
-  SDL_Texture *tbutton_off = LoadPicTexture(renderer, kVbtnOffPath);
+void InitButton(BoardImpl *impl) {
+  SDL_Renderer *renderer = impl->renderer_;
+  SDL_Texture *tbutton_on = LoadPicTexture(impl, kVbtnOnPath);
+  SDL_Texture *tbutton_off = LoadPicTexture(impl, kVbtnOffPath);
   InitRenderLocal(renderer);
 
   for (int i = 0; i < 5; ++i) {
-    auto *ptr = new Component(renderer, 2, 0, ComponentType::kButton);
+    auto *ptr = new Component(impl, 2, 0, ComponentType::kButton);
 
     auto *rect_ptr = new SDL_Rect;
     *rect_ptr = kBtnRects[i];
@@ -67,7 +68,7 @@ void InitButton(SDL_Renderer *renderer) {
     ptr->SetTexture(tbutton_on, 1);
 
     ptr->AddPin(BTNC + i);
-    AddComponent(ptr);
+    impl->AddComponent(ptr);
   }
 }
 

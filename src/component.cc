@@ -1,15 +1,11 @@
 #include "src/internal/component.h"
 
-#include <vector>
-
-#include "src/internal/nvboard_internal.h"
-#include "src/internal/pins_internal.h"
+#include "src/internal/board_impl.h"
 
 namespace nvboard {
 
-Component::Component(SDL_Renderer *rend, int cnt, int init_val,
-                     ComponentType ct)
-    : renderer_(rend), component_type_(ct), state_(init_val) {
+Component::Component(BoardImpl *board, int cnt, int init_val, ComponentType ct)
+    : board_(board), component_type_(ct), state_(init_val) {
   rects_.resize(cnt);
   textures_.resize(cnt);
 }
@@ -20,7 +16,7 @@ bool Component::InRect(int x, int y) const {
          y < temp->y + temp->h;
 }
 
-SDL_Renderer *Component::GetRenderer() const { return renderer_; }
+SDL_Renderer *Component::GetRenderer() const { return board_->renderer_; }
 
 ComponentType Component::GetComponentType() const { return component_type_; }
 
@@ -43,13 +39,14 @@ void Component::SetState(int val) { state_ = val; }
 void Component::AddPin(uint16_t pin) { pins_.push_back(pin); }
 
 void Component::UpdateGui() {
-  SDL_RenderCopy(renderer_, textures_[state_], nullptr, rects_[state_]);
-  SetRedraw();
+  SDL_RenderCopy(board_->renderer_, textures_[state_], nullptr,
+                 rects_[state_]);
+  board_->SetRedraw();
 }
 
 void Component::UpdateState() {
   uint16_t pin = *(pins_.begin());
-  int newval = PinPeek(pin);
+  int newval = board_->PinPeek(pin);
   if (newval != state_) {
     SetState(newval);
     UpdateGui();
@@ -62,55 +59,22 @@ void Component::Remove() {
   }
 }
 
-void InitLed(SDL_Renderer *renderer);
-void InitSwitch(SDL_Renderer *renderer);
-void InitButton(SDL_Renderer *renderer);
-void InitSegs7(SDL_Renderer *renderer);
-void InitKeyboard(SDL_Renderer *renderer);
-void InitVga(SDL_Renderer *renderer);
-void InitUart(SDL_Renderer *renderer);
+void InitLed(BoardImpl *impl);
+void InitSwitch(BoardImpl *impl);
+void InitButton(BoardImpl *impl);
+void InitSegs7(BoardImpl *impl);
+void InitKeyboard(BoardImpl *impl);
+void InitVga(BoardImpl *impl);
+void InitUart(BoardImpl *impl);
 
-void InitComponents(SDL_Renderer *renderer) {
-  InitLed(renderer);
-  InitSwitch(renderer);
-  InitButton(renderer);
-  InitSegs7(renderer);
-  InitKeyboard(renderer);
-  InitVga(renderer);
-  InitUart(renderer);
-}
-
-namespace {
-
-std::vector<Component *> &Components() {
-  static std::vector<Component *> components;
-  return components;
-}
-
-}  // namespace
-
-std::vector<Component *> &GetComponents() { return Components(); }
-
-void AddComponent(Component *c) { Components().push_back(c); }
-
-void DeleteComponents() {
-  for (auto comp_ptr : Components()) {
-    comp_ptr->Remove();
-    delete comp_ptr;
-  }
-  Components().clear();
-}
-
-void InitGui(SDL_Renderer * /*renderer*/) {
-  for (auto ptr : Components()) {
-    ptr->UpdateGui();
-  }
-}
-
-void UpdateComponents(SDL_Renderer * /*renderer*/) {
-  for (auto ptr : Components()) {
-    ptr->UpdateState();
-  }
+void InitComponents(BoardImpl *impl) {
+  InitLed(impl);
+  InitSwitch(impl);
+  InitButton(impl);
+  InitSegs7(impl);
+  InitKeyboard(impl);
+  InitVga(impl);
+  InitUart(impl);
 }
 
 }  // namespace nvboard

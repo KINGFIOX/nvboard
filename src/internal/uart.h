@@ -12,8 +12,8 @@ namespace nvboard {
 
 class Uart : public Component {
  public:
-  Uart(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct, int x,
-       int y, int w, int h);
+  Uart(BoardImpl *board, int cnt, int init_val, ComponentType ct, int x, int y,
+       int w, int h);
   ~Uart() override;
   void SetDivisor(uint16_t d);
 

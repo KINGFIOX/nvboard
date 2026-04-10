@@ -30,7 +30,6 @@ set(NVBOARD_SOURCES
   src/segs7.cc
   src/switch.cc
   src/term.cc
-  src/timer.cc
   src/uart.cc
   src/vga.cc
 )
@@ -51,6 +50,7 @@ target_link_libraries(nvboard
     PkgConfig::SDL2
     PkgConfig::SDL2_IMAGE
     PkgConfig::SDL2_TTF
+    absl::span
   PRIVATE
     absl::absl_check
     absl::absl_log

@@ -20,9 +20,18 @@ constexpr int kPs2Stop = 10;
 #define NVBOARD_UINT4_XOR(a) NVBOARD_UINT2_XOR(((a) >> 2) ^ ((a) & 0b11))
 #define NVBOARD_UINT8_XOR(a) NVBOARD_UINT4_XOR(((a) >> 4) ^ ((a) & 0b1111))
 
+struct Key {
+  SDL_Texture *t_up = nullptr;
+  SDL_Texture *t_down = nullptr;
+  SDL_Rect rect = {};
+  uint8_t map0 = 0;
+  uint8_t map1 = 0;
+  bool pressing = false;
+};
+
 class Keyboard : public Component {
  public:
-  Keyboard(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct);
+  Keyboard(BoardImpl *board, int cnt, int init_val, ComponentType ct);
   ~Keyboard() override;
   void PushKey(uint8_t scancode, bool is_keydown);
   void UpdateState() override;

@@ -1,6 +1,7 @@
 #include "src/internal/uart.h"
 
 #include "absl/log/absl_check.h"
+#include "src/internal/board_impl.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
@@ -9,40 +10,34 @@ namespace {
 
 constexpr int kUartTxFps = 5;
 
-Uart *uart_instance = nullptr;
-Uart *&uart = uart_instance;
-
 }  // namespace
 
-int16_t uart_divisor_cnt = 0;
-bool is_uart_rx_idle = true;
-
-Uart::Uart(SDL_Renderer *rend, int cnt, int init_val, ComponentType ct, int x,
+Uart::Uart(BoardImpl *board, int cnt, int init_val, ComponentType ct, int x,
            int y, int w, int h)
-    : Component(rend, cnt, init_val, ct),
+    : Component(board, cnt, init_val, ct),
       tx_state_(0),
       rx_state_(0),
       divisor_(16),
       tx_data_(0),
       rx_data_(0),
       need_update_gui_(false) {
-  term_ = new Term(rend, x, y, w, h);
+  term_ = new Term(board, x, y, w, h);
 
   auto *rect_ptr = new SDL_Rect;
   *rect_ptr = SDL_Rect{x, y, w, h};
   SetRect(rect_ptr, 0);
 
-  uart_divisor_cnt = divisor_ - 1;
-  int len = pin_array[UART_TX].vector_len;
+  board_->uart_divisor_cnt_ = divisor_ - 1;
+  int len = board_->pin_array_[UART_TX].vector_len;
   ABSL_CHECK(len == 0 || len == 1);
-  p_tx_ = static_cast<uint8_t *>(pin_array[UART_TX].ptr);
+  p_tx_ = static_cast<uint8_t *>(board_->pin_array_[UART_TX].ptr);
 
-  SDL_SetRenderDrawColor(rend, 0x00, 0x00, 0x00, 0);
-  SDL_RenderDrawLine(rend, x, y + h, x + w, y + h);
-  SDL_SetRenderDrawColor(rend, 0xff, 0xff, 0xff, 0);
+  SDL_SetRenderDrawColor(board->renderer_, 0x00, 0x00, 0x00, 0);
+  SDL_RenderDrawLine(board->renderer_, x, y + h, x + w, y + h);
+  SDL_SetRenderDrawColor(board->renderer_, 0xff, 0xff, 0xff, 0);
 
   rx_sending_str_ = "";
-  PinPoke(UART_RX, 1);
+  board_->PinPoke(UART_RX, 1);
 }
 
 Uart::~Uart() { SDL_DestroyTexture(GetTexture(0)); }
@@ -50,7 +45,7 @@ Uart::~Uart() { SDL_DestroyTexture(GetTexture(0)); }
 void Uart::UpdateGui() {}
 
 void Uart::TxReceive() {
-  uart_divisor_cnt = divisor_ - 1;
+  board_->uart_divisor_cnt_ = divisor_ - 1;
 
   uint8_t tx = *p_tx_;
   if (tx_state_ == 0) {
@@ -74,18 +69,18 @@ void Uart::RxSend() {
   if (rx_state_ == 0) {
     rx_data_ = rx_sending_str_[0];
     if (rx_data_ == '\0') {
-      is_uart_rx_idle = true;
+      board_->is_uart_rx_idle_ = true;
       return;
     }
     rx_sending_str_.erase(0, 1);
-    PinPoke(UART_RX, 0);
+    board_->PinPoke(UART_RX, 0);
     rx_state_++;
   } else if (rx_state_ >= 1 && rx_state_ <= 8) {
-    PinPoke(UART_RX, rx_data_ & 1);
+    board_->PinPoke(UART_RX, rx_data_ & 1);
     rx_data_ >>= 1;
     rx_state_++;
   } else if (rx_state_ == 9) {
-    PinPoke(UART_RX, 1);
+    board_->PinPoke(UART_RX, 1);
     rx_state_ = 0;
   }
 }
@@ -93,7 +88,7 @@ void Uart::RxSend() {
 void Uart::RxGetchar(uint8_t ch) {
   rx_sending_str_ += ch;
   rx_char_queue_.push(ch);
-  is_uart_rx_idle = false;
+  board_->is_uart_rx_idle_ = false;
 }
 
 void Uart::DirectPutchar(uint8_t ch) {
@@ -111,7 +106,7 @@ uint8_t Uart::GetRxChar() {
 void Uart::UpdateState() {
   if (need_update_gui_) {
     static uint64_t last = 0;
-    uint64_t now = GetTime();
+    uint64_t now = board_->GetTime();
     if (now - last > 1000000 / kUartTxFps) {
       last = now;
       need_update_gui_ = false;
@@ -123,8 +118,6 @@ void Uart::UpdateState() {
 void Uart::SetDivisor(uint16_t d) { divisor_ = d; }
 
 void Uart::TermFocus(bool v) { term_->SetFocus(v); }
-
-Uart *&GetUartInstance() { return uart_instance; }
 
 namespace {
 
@@ -147,18 +140,14 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 }  // namespace
 
-void InitUart(SDL_Renderer *renderer) {
-  InitRenderLocal(renderer);
+void InitUart(BoardImpl *impl) {
+  InitRenderLocal(impl->renderer_);
   int x = kWindowWidth / 2, y = 0, w = kWindowWidth / 2, h = kWindowHeight / 2;
-  uart = new Uart(renderer, 1, 0, ComponentType::kUart, x, y, w, h);
-  uart->AddPin(UART_TX);
-  uart->AddPin(UART_RX);
-  AddComponent(uart);
+  impl->uart_device_ =
+      new Uart(impl, 1, 0, ComponentType::kUart, x, y, w, h);
+  impl->uart_device_->AddPin(UART_TX);
+  impl->uart_device_->AddPin(UART_RX);
+  impl->AddComponent(impl->uart_device_);
 }
-
-void UartTxReceive() { uart->TxReceive(); }
-void UartRxSend() { uart->RxSend(); }
-void UartRxGetchar(uint8_t ch) { uart->RxGetchar(ch); }
-void UartTermFocus(bool v) { uart->TermFocus(v); }
 
 }  // namespace nvboard
