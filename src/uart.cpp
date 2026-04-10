@@ -4,7 +4,8 @@
 // There is no need to update TX too frequently
 #define UART_TX_FPS 5
 
-static UART *uart = NULL;
+UART *uart_instance = NULL;
+static UART *&uart = uart_instance;
 int16_t uart_divisor_cnt = 0;
 bool is_uart_rx_idle = true;
 
@@ -80,7 +81,21 @@ void UART::rx_send() {
 
 void UART::rx_getchar(uint8_t ch) {
   rx_sending_str += ch;
+  rx_char_queue.push(ch);
   is_uart_rx_idle = false;
+}
+
+void UART::direct_putchar(uint8_t ch) {
+  term->feed_ch(ch);
+  need_update_gui = true;
+}
+
+uint8_t UART::get_rx_char() {
+  if (rx_char_queue.empty())
+    return 0;
+  uint8_t ch = rx_char_queue.front();
+  rx_char_queue.pop();
+  return ch;
 }
 
 void UART::update_state() {

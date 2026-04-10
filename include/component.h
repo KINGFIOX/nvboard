@@ -2,6 +2,7 @@
 #define __COMPONENT_H__
 
 #include <SDL.h>
+#include <cstdint>
 #include <vector>
 
 // component type
@@ -49,15 +50,6 @@ public:
 
   friend void delete_components();
 };
-
-#if 0
-class RGB_LED : public Component{
-public:
-  RGB_LED(SDL_Renderer *rend, int cnt, int init_val, int ct);
-  virtual void update_gui();
-  virtual void update_state();
-};
-#endif
 
 class SEGS7 : public Component {
 private:

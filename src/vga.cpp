@@ -2,7 +2,8 @@
 #include <nvboard.h>
 #include <vga.h>
 
-static VGA *vga = NULL;
+VGA *vga_instance = NULL;
+static VGA *&vga = vga_instance;
 
 VGA_MODE vga_mod_accepted[NR_VGA_MODE] = {
     [VGA_MODE_640_480] =
@@ -23,7 +24,8 @@ uint8_t *vga_blank_n_ptr = NULL;
 
 VGA::VGA(SDL_Renderer *rend, int cnt, int init_val, int ct)
     : Component(rend, cnt, init_val, ct), vga_screen_width(VGA_DEFAULT_WIDTH),
-      vga_screen_height(VGA_DEFAULT_HEIGHT), vga_clk_cnt(1) {
+      vga_screen_height(VGA_DEFAULT_HEIGHT), vga_clk_cnt(1),
+      ext_fb(nullptr), ext_fb_w(0), ext_fb_h(0) {
   SDL_Texture *vga_texture = SDL_CreateTexture(
       rend, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
       vga_screen_width, vga_screen_height);
@@ -119,6 +121,24 @@ void VGA::update_state() {
   if (unlikely(p_pixel == p_pixel_end)) {
     finish_one_frame();
   }
+}
+
+void VGA::set_external_framebuffer(uint32_t *fb, int w, int h) {
+  ext_fb = fb;
+  ext_fb_w = w;
+  ext_fb_h = h;
+}
+
+void VGA::sync_from_framebuffer() {
+  if (!ext_fb)
+    return;
+  int copy_w = ext_fb_w < vga_screen_width ? ext_fb_w : vga_screen_width;
+  int copy_h = ext_fb_h < vga_screen_height ? ext_fb_h : vga_screen_height;
+  for (int y = 0; y < copy_h; y++) {
+    memcpy(pixels + y * vga_screen_width, ext_fb + y * ext_fb_w,
+           copy_w * sizeof(uint32_t));
+  }
+  update_gui();
 }
 
 void vga_set_clk_cycle(int cycle) { vga_clk_cycle_minus_1 = cycle - 1; }

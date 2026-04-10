@@ -28,6 +28,9 @@ private:
   bool is_all_len8;
   bool is_pixels_same;
 
+  uint32_t *ext_fb;
+  int ext_fb_w, ext_fb_h;
+
   uint32_t get_pixel_color_slowpath();
   void finish_one_frame();
 
@@ -37,6 +40,9 @@ public:
 
   virtual void update_gui();
   virtual void update_state();
+
+  void set_external_framebuffer(uint32_t *fb, int w, int h);
+  void sync_from_framebuffer();
 };
 
 #endif

@@ -19,6 +19,7 @@
 class KEYBOARD : public Component {
 private:
   std::queue<uint8_t> all_keys;
+  std::queue<uint8_t> virtual_keys;
   int data_idx;
   int left_clk;
   int cur_key;
@@ -28,6 +29,9 @@ public:
   ~KEYBOARD();
   void push_key(uint8_t scancode, bool is_keydown);
   virtual void update_state();
+
+  bool has_scancode() const { return !virtual_keys.empty(); }
+  uint8_t dequeue_scancode();
 };
 
 #endif

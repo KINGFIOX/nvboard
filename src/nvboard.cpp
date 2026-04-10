@@ -2,6 +2,8 @@
 #include <macro.h>
 #include <nvboard.h>
 #include <stdarg.h>
+#include <uart.h>
+#include <vga.h>
 
 #define FPS 60
 
@@ -124,4 +126,92 @@ void nvboard_bind_pin(void *signal, int len, ...) {
     pin_array[pin].bit_offset = len - 1 - i;
   }
   va_end(ap);
+}
+
+// --- Virtual device API (for spike+nvboard, no pin bindings) ---
+
+static KEYBOARD *nvboard_get_kb() {
+  extern KEYBOARD *kb_instance;
+  return kb_instance;
+}
+
+static UART *nvboard_get_uart() {
+  extern UART *uart_instance;
+  return uart_instance;
+}
+
+static VGA *nvboard_get_vga() {
+  extern VGA *vga_instance;
+  return vga_instance;
+}
+
+bool nvboard_kbd_available() {
+  KEYBOARD *kb = nvboard_get_kb();
+  return kb && kb->has_scancode();
+}
+
+uint8_t nvboard_kbd_dequeue() {
+  KEYBOARD *kb = nvboard_get_kb();
+  if (!kb)
+    return 0;
+  return kb->dequeue_scancode();
+}
+
+void nvboard_vga_set_framebuffer(uint32_t *fb, int w, int h) {
+  VGA *vga = nvboard_get_vga();
+  if (vga)
+    vga->set_external_framebuffer(fb, w, h);
+}
+
+void nvboard_vga_sync() {
+  VGA *vga = nvboard_get_vga();
+  if (vga)
+    vga->sync_from_framebuffer();
+}
+
+void nvboard_uart_putchar(uint8_t ch) {
+  UART *u = nvboard_get_uart();
+  if (u)
+    u->direct_putchar(ch);
+}
+
+bool nvboard_uart_available() {
+  UART *u = nvboard_get_uart();
+  return u && u->has_rx_char();
+}
+
+uint8_t nvboard_uart_getchar() {
+  UART *u = nvboard_get_uart();
+  if (!u)
+    return 0;
+  return u->get_rx_char();
+}
+
+uint16_t nvboard_sw_read() {
+  uint16_t val = 0;
+  for (int i = 0; i < 16; i++) {
+    val |= (uint16_t)(pin_peek(SW0 + i) & 1) << i;
+  }
+  return val;
+}
+
+uint8_t nvboard_btn_read() {
+  uint8_t val = 0;
+  for (int i = 0; i < 5; i++) {
+    val |= (uint8_t)(pin_peek(BTNC + i) & 1) << i;
+  }
+  return val;
+}
+
+void nvboard_led_write(uint16_t val) {
+  for (int i = 0; i < 16; i++) {
+    pin_poke(LD0 + i, (val >> i) & 1);
+  }
+}
+
+void nvboard_seg7_write(int idx, uint8_t segments) {
+  int base = SEG0A + idx * 8;
+  for (int i = 0; i < 8; i++) {
+    pin_poke(base + i, (segments >> i) & 1);
+  }
 }

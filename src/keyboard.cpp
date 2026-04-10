@@ -9,7 +9,8 @@ typedef struct {
   bool pressing;
 } Key;
 
-static KEYBOARD *kb = NULL;
+KEYBOARD *kb_instance = NULL;
+static KEYBOARD *&kb = kb_instance;
 bool is_kb_idle = true;
 static Key keys[256] = {};
 
@@ -17,16 +18,28 @@ KEYBOARD::KEYBOARD(SDL_Renderer *rend, int cnt, int init_val, int ct)
     : Component(rend, cnt, init_val, ct), data_idx(0), left_clk(0),
       cur_key(NOT_A_KEY) {}
 
+uint8_t KEYBOARD::dequeue_scancode() {
+  if (virtual_keys.empty())
+    return 0;
+  uint8_t sc = virtual_keys.front();
+  virtual_keys.pop();
+  return sc;
+}
+
 void KEYBOARD::push_key(uint8_t sdl_key, bool is_keydown) {
   Key *e = &keys[sdl_key];
   uint8_t at_key = e->map0;
   if (at_key == 0xe0) {
-    all_keys.push(0xe0); // 拓展建
+    all_keys.push(0xe0);
+    virtual_keys.push(0xe0);
     at_key = e->map1;
   }
-  if (!is_keydown)
-    all_keys.push(0xf0); // 释放序列, [f0, <keycode>]
+  if (!is_keydown) {
+    all_keys.push(0xf0);
+    virtual_keys.push(0xf0);
+  }
   all_keys.push(at_key);
+  virtual_keys.push(at_key);
   is_kb_idle = false;
 
   if (e->pressing != is_keydown) {

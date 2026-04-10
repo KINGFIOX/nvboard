@@ -2,6 +2,7 @@
 #define __UART_H__
 
 #include <component.h>
+#include <queue>
 #include <string>
 #include <term.h>
 
@@ -12,6 +13,7 @@ private:
   uint16_t divisor;
   uint8_t tx_data, rx_data;
   std::string rx_sending_str;
+  std::queue<uint8_t> rx_char_queue;
   bool need_update_gui;
   uint8_t *p_tx;
 
@@ -27,6 +29,10 @@ public:
   void rx_send();
   void rx_getchar(uint8_t ch);
   void term_focus(bool v);
+
+  void direct_putchar(uint8_t ch);
+  bool has_rx_char() const { return !rx_char_queue.empty(); }
+  uint8_t get_rx_char();
 };
 
 #endif
