@@ -15,9 +15,8 @@
           src = self;
           pname = "nvboard";
           version = "0.1.0";
-          nativeBuildInputs = with pkgs; [ meson ninja pkg-config ];
-          buildInputs = with pkgs; [ SDL2 SDL2_image SDL2_ttf ];
-          mesonBuildType = "release";
+          nativeBuildInputs = with pkgs; [ cmake ninja pkg-config ];
+          buildInputs = with pkgs; [ SDL2 SDL2_image SDL2_ttf abseil-cpp ];
         };
       in
       {
@@ -31,7 +30,8 @@
             SDL2
             SDL2_image
             SDL2_ttf
-            meson
+            abseil-cpp
+            cmake
             ninja
             verilator
             python3
@@ -41,8 +41,7 @@
           shellHook = ''
             export NVBOARD_HOME="$(pwd)"
             echo "NVBOARD_HOME is set to: $NVBOARD_HOME"
-            echo "Build nvboard: meson setup build && ninja -C build"
-            echo "With upstream example (Makefile): set NVBOARD_HOME and run make -C example run"
+            echo "Build nvboard: cmake -B build -G Ninja && ninja -C build"
           '';
         };
       }
