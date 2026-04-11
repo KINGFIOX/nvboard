@@ -12,10 +12,6 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(SDL2_IMAGE REQUIRED IMPORTED_TARGET SDL2_image)
 pkg_check_modules(SDL2_TTF REQUIRED IMPORTED_TARGET SDL2_ttf)
 find_package(absl REQUIRED)
-get_filename_component(ABSL_CMAKE_DIR "${absl_DIR}" DIRECTORY)
-get_filename_component(ABSL_LIB_DIR "${ABSL_CMAKE_DIR}" DIRECTORY)
-get_filename_component(ABSL_ROOT_DIR "${ABSL_LIB_DIR}" DIRECTORY)
-set(ABSL_INCLUDE_DIR "${ABSL_ROOT_DIR}/include")
 
 # --- Sources ---
 set(NVBOARD_SOURCES
@@ -43,7 +39,6 @@ target_include_directories(nvboard
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-target_compile_options(nvboard PRIVATE "-isystem${ABSL_INCLUDE_DIR}")
 
 target_link_libraries(nvboard
   PUBLIC
