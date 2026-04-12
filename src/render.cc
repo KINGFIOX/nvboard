@@ -1,22 +1,14 @@
 #include "src/internal/render.h"
 
+#include <cstddef>
 #include <cstring>
-#include <string>
 
 #include "absl/log/absl_check.h"
-#include "absl/strings/str_cat.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
 
 namespace {
-
-SDL_Texture *LoadTexture(BoardImpl *impl, const std::string &path) {
-  SDL_Texture *t = IMG_LoadTexture(
-      impl->renderer_, absl::StrCat(impl->nvboard_home_, path).c_str());
-  ABSL_CHECK(t != nullptr) << "Failed to load texture: " << path;
-  return t;
-}
 
 void DrawStrInternal(SDL_Renderer *renderer, SDL_Texture *t, const char *str,
                      int x, int y) {
@@ -27,8 +19,13 @@ void DrawStrInternal(SDL_Renderer *renderer, SDL_Texture *t, const char *str,
 
 }  // namespace
 
-SDL_Texture *LoadPicTexture(BoardImpl *impl, const std::string &path) {
-  return LoadTexture(impl, absl::StrCat("/resources/pic/", path));
+SDL_Texture *LoadTextureFromMemory(SDL_Renderer *renderer,
+                                   const unsigned char *data, size_t size) {
+  SDL_RWops *rw = SDL_RWFromConstMem(data, static_cast<int>(size));
+  ABSL_CHECK(rw != nullptr);
+  SDL_Texture *t = IMG_LoadTexture_RW(renderer, rw, 1);
+  ABSL_CHECK(t != nullptr) << "Failed to load texture from embedded data";
+  return t;
 }
 
 SDL_Texture *Surface2Texture(SDL_Renderer *renderer, SDL_Surface *s) {

@@ -1,8 +1,5 @@
 #include "nvboard/nvboard.h"
 
-#include <cstdlib>
-#include <filesystem>
-
 #include "absl/base/optimization.h"
 #include "absl/log/absl_check.h"
 #include "absl/time/clock.h"
@@ -62,17 +59,6 @@ std::unique_ptr<Board> Board::Create(int vga_clk_cycle) {
   auto board = std::unique_ptr<Board>(new Board());
   board->impl_ = std::make_unique<BoardImpl>();
   BoardImpl *impl = board->impl_.get();
-
-  const char *home = std::getenv("NVBOARD_HOME");
-  ABSL_CHECK(home != nullptr) << "NVBOARD_HOME environment variable not set";
-  std::filesystem::path home_path(home);
-  if (std::filesystem::exists(home_path / "resources")) {
-    impl->nvboard_home_ = home_path.string();
-  } else if (std::filesystem::exists(home_path / "share/nvboard/resources")) {
-    impl->nvboard_home_ = (home_path / "share/nvboard").string();
-  } else {
-    impl->nvboard_home_ = home_path.string();
-  }
 
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   IMG_Init(IMG_INIT_PNG);

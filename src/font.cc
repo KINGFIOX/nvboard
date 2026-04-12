@@ -1,14 +1,13 @@
 #include "src/internal/font.h"
 
 #include <cstring>
-#include <string>
 
 #include <SDL_ttf.h>
 
 #include "absl/log/absl_check.h"
-#include "absl/strings/str_cat.h"
 #include "src/internal/board_impl.h"
 #include "src/internal/configs.h"
+#include "src/internal/embedded_resources.h"
 #include "src/internal/render.h"
 
 namespace nvboard {
@@ -26,11 +25,12 @@ void InitFont(BoardImpl *impl) {
   SDL_Renderer *renderer = impl->renderer_;
   int ret = TTF_Init();
   ABSL_CHECK_NE(ret, -1);
-  std::string font_path =
-      absl::StrCat(impl->nvboard_home_, "/resources/font/FreeMono.ttf");
 
-  font = TTF_OpenFont(font_path.c_str(), 48);
-  ABSL_CHECK(font != nullptr) << "Failed to open font: " << font_path;
+  SDL_RWops *rw = SDL_RWFromConstMem(kFreeMono_ttf,
+                                     static_cast<int>(kFreeMono_ttf_size));
+  ABSL_CHECK(rw != nullptr);
+  font = TTF_OpenFontRW(rw, 1, 48);
+  ABSL_CHECK(font != nullptr) << "Failed to open embedded font";
   TTF_SetFontHinting(font, TTF_HINTING_MONO);
   TTF_SetFontStyle(font, TTF_STYLE_BOLD);
   impl->nvboard_texture_ =

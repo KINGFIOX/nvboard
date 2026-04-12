@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "src/internal/embedded_resources.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
@@ -45,8 +46,10 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 void InitSwitch(BoardImpl *impl) {
   SDL_Renderer *renderer = impl->renderer_;
-  SDL_Texture *tswitch_on = LoadPicTexture(impl, kVswOnPath);
-  SDL_Texture *tswitch_off = LoadPicTexture(impl, kVswOffPath);
+  SDL_Texture *tswitch_on =
+      LoadTextureFromMemory(renderer, kVswOn_png, kVswOn_png_size);
+  SDL_Texture *tswitch_off =
+      LoadTextureFromMemory(renderer, kVswOff_png, kVswOff_png_size);
   InitRenderLocal(renderer);
   for (int i = 0; i < 16; ++i) {
     auto *ptr = new Component(impl, 2, 0, ComponentType::kSwitch);

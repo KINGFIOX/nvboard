@@ -1,7 +1,7 @@
 #ifndef NVBOARD_SRC_INTERNAL_NVBOARD_INTERNAL_H_
 #define NVBOARD_SRC_INTERNAL_NVBOARD_INTERNAL_H_
 
-#include <string>
+#include <cstddef>
 
 #include <SDL_image.h>
 
@@ -15,7 +15,8 @@ namespace nvboard {
 #define NVBOARD_VERSION_STR "v1.0 (2024.01.10)"
 
 void InitRender(BoardImpl *impl);
-SDL_Texture *LoadPicTexture(BoardImpl *impl, const std::string &path);
+SDL_Texture *LoadTextureFromMemory(SDL_Renderer *renderer,
+                                   const unsigned char *data, size_t size);
 SDL_Texture *NewTexture(SDL_Renderer *renderer, int w, int h, int r, int g,
                         int b);
 

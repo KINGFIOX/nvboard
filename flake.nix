@@ -14,7 +14,7 @@
         nvboardPkg = stdenv.mkDerivation {
           src = self;
           pname = "nvboard";
-          version = "0.1.0";
+          version = self.shortRev or self.dirtyShortRev or "dirty";
           # If there is cmake+ninja in nativeBuildInputs,
           # Nix would get into compilation automatically.
           nativeBuildInputs = with pkgs; [ cmake ninja pkg-config ];
@@ -41,8 +41,6 @@
           ];
 
           shellHook = ''
-            export NVBOARD_HOME="$(pwd)"
-            echo "NVBOARD_HOME is set to: $NVBOARD_HOME"
             echo "Build nvboard: cmake -B build -G Ninja && ninja -C build"
           '';
         };

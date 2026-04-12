@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "src/internal/embedded_resources.h"
 #include "src/internal/nvboard_internal.h"
 
 namespace nvboard {
@@ -50,8 +51,10 @@ void InitRenderLocal(SDL_Renderer *renderer) {
 
 void InitButton(BoardImpl *impl) {
   SDL_Renderer *renderer = impl->renderer_;
-  SDL_Texture *tbutton_on = LoadPicTexture(impl, kVbtnOnPath);
-  SDL_Texture *tbutton_off = LoadPicTexture(impl, kVbtnOffPath);
+  SDL_Texture *tbutton_on =
+      LoadTextureFromMemory(renderer, kVbtnOn_png, kVbtnOn_png_size);
+  SDL_Texture *tbutton_off =
+      LoadTextureFromMemory(renderer, kVbtnOff_png, kVbtnOff_png_size);
   InitRenderLocal(renderer);
 
   for (int i = 0; i < 5; ++i) {

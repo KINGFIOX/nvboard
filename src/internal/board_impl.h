@@ -2,7 +2,6 @@
 #define NVBOARD_SRC_INTERNAL_BOARD_IMPL_H_
 
 #include <cstdint>
-#include <string>
 #include <vector>
 
 #include <SDL.h>
@@ -55,7 +54,6 @@ class BoardImpl {
   bool is_uart_rx_idle_ = true;
 
   SDL_Texture *nvboard_texture_ = nullptr;
-  std::string nvboard_home_;
 
   bool uart_term_has_focus_ = false;
 

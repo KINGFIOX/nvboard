@@ -15,6 +15,7 @@
 !*.h
 !*.py
 !*.in
+!*.cmake
 !*.png
 !*.ttf
 build/

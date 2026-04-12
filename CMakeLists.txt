@@ -62,6 +62,43 @@ target_compile_options(nvboard PRIVATE
   -Wno-variadic-macro-arguments-omitted
 )
 
+# --- Embed resources ---
+set(NVBOARD_RESOURCES
+  resources/pic/vbtn_on.png   kVbtnOn_png
+  resources/pic/vbtn_off.png  kVbtnOff_png
+  resources/pic/vsw_on.png    kVswOn_png
+  resources/pic/vsw_off.png   kVswOff_png
+  resources/font/FreeMono.ttf kFreeMono_ttf
+)
+set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+file(MAKE_DIRECTORY "${GENERATED_DIR}")
+
+set(GENERATED_HEADERS)
+list(LENGTH NVBOARD_RESOURCES _res_len)
+math(EXPR _res_last "${_res_len} - 1")
+foreach(_i RANGE 0 ${_res_last} 2)
+  math(EXPR _j "${_i} + 1")
+  list(GET NVBOARD_RESOURCES ${_i} _file)
+  list(GET NVBOARD_RESOURCES ${_j} _var)
+  set(_out "${GENERATED_DIR}/${_var}.h")
+  add_custom_command(
+    OUTPUT "${_out}"
+    COMMAND ${CMAKE_COMMAND}
+      -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${_file}
+      -DOUTPUT_FILE=${_out}
+      -DVAR_NAME=${_var}
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/bin2c.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_file}
+            ${CMAKE_CURRENT_SOURCE_DIR}/cmake/bin2c.cmake
+    COMMENT "Embedding ${_file} as ${_var}"
+  )
+  list(APPEND GENERATED_HEADERS "${_out}")
+endforeach()
+add_custom_target(nvboard_embedded_resources DEPENDS ${GENERATED_HEADERS})
+add_dependencies(nvboard nvboard_embedded_resources)
+
+target_include_directories(nvboard PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 # --- Install ---
 include(GNUInstallDirs)
 
@@ -71,9 +108,6 @@ install(TARGETS nvboard
 )
 install(DIRECTORY include/nvboard
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-install(DIRECTORY resources
-  DESTINATION ${CMAKE_INSTALL_DATADIR}/nvboard
 )
 
 # --- CMake config for downstream ---
