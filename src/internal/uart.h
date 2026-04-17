@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <queue>
-#include <string>
 
 #include "src/internal/component.h"
 #include "src/internal/term.h"
@@ -15,12 +14,9 @@ class Uart : public Component {
   Uart(BoardImpl *board, int cnt, int init_val, ComponentType ct, int x, int y,
        int w, int h);
   ~Uart() override;
-  void SetDivisor(uint16_t d);
 
   void UpdateGui() override;
   void UpdateState() override;
-  void TxReceive();
-  void RxSend();
   void RxGetchar(uint8_t ch);
   void TermFocus(bool v);
 
@@ -30,15 +26,8 @@ class Uart : public Component {
 
  private:
   Term *term_;
-  int tx_state_;
-  int rx_state_;
-  uint16_t divisor_;
-  uint8_t tx_data_;
-  uint8_t rx_data_;
-  std::string rx_sending_str_;
   std::queue<uint8_t> rx_char_queue_;
   bool need_update_gui_;
-  uint8_t *p_tx_;
 };
 
 }  // namespace nvboard

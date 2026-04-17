@@ -30,9 +30,6 @@ namespace nvboard {
       SEG6C, SEG6D, SEG6E, SEG6F, SEG6G, DEC6P, SEG7A, SEG7B, SEG7C, SEG7D,  \
       SEG7E, SEG7F, SEG7G, DEC7P
 
-#define UART_OUTPUT UART_TX
-#define UART_INPUT UART_RX
-
 #define VGA_OUTPUT                                                             \
   VGA_VSYNC, VGA_HSYNC, VGA_BLANK_N, VGA_R0, VGA_R1, VGA_R2, VGA_R3,         \
       VGA_R4, VGA_R5, VGA_R6, VGA_R7, VGA_G0, VGA_G1, VGA_G2, VGA_G3,        \
@@ -45,13 +42,11 @@ enum PinId {
   BTN_INPUT,
   SW_INPUT,
   KEYBOARD_INPUT,
-  UART_INPUT,
 
   NAIVE_LEDS_OUTPUT,
   RGB_LEDS_OUTPUT,
   SEG7_SEGS_OUTPUT,
   VGA_OUTPUT,
-  UART_OUTPUT,
   NR_PINS,
 };
 

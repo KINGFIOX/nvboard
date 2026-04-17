@@ -109,12 +109,6 @@ void Board::Update() {
   if (ABSL_PREDICT_FALSE(!impl->is_kb_idle_))
     impl->keyboard_->UpdateState();
 
-  if (ABSL_PREDICT_FALSE((--impl->uart_divisor_cnt_) < 0)) {
-    impl->uart_device_->TxReceive();
-    if (ABSL_PREDICT_FALSE(!impl->is_uart_rx_idle_))
-      impl->uart_device_->RxSend();
-  }
-
   if (ABSL_PREDICT_FALSE((--impl->frame_cnt_) < 0)) {
     uint64_t now = impl->GetTime();
     uint64_t diff = now - impl->frame_last_;

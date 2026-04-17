@@ -50,8 +50,6 @@ class BoardImpl {
   int vga_clk_cycle_minus_1_ = 0;
 
   Uart *uart_device_ = nullptr;
-  int16_t uart_divisor_cnt_ = 0;
-  bool is_uart_rx_idle_ = true;
 
   SDL_Texture *nvboard_texture_ = nullptr;
 
